@@ -1,6 +1,10 @@
 %% Animate all data from file: load it in and display on the same graph
 % Load in data from file 
-% Just animate all centroids and outlines 
+% Last edited 7.24.18
+%% Edits 
+% - creates new folder 
+% - generates text files for each cell of stats to that folder 
+% - 7.24.18 
 
 my_data = dir ('**/*.mat'); 
 
@@ -70,8 +74,8 @@ end
 my_diff_area = cellfun(@(x) diff(x(1,1:end-1)),area_all,'UniformOutput',false); 
 my_diff_luminosity = cellfun(@(x) diff(x(1,1:end-1)),intensity_all,'UniformOutput',false);
 
-my_diff_x = diff(x(:,1:end-1),1,2); 
-my_diff_y = diff(y(:,1:end-1),1,2); 
+my_diff_x = diff(x(:,1:end),1,2); 
+my_diff_y = diff(y(:,1:end),1,2); 
 
 displacement = sqrt(my_diff_x.^2 + my_diff_y.^2); 
 
@@ -92,6 +96,33 @@ for j = 1:N-1
     
 end 
 clear vars ax b j m x_1 y_1 x y 
+
+
+%% Write text sheet to export stats 
+filename = 'Trace Data'; 
+mkdir(filename); 
+cd(filename); 
+for j = 1:abs(length(area_all))
+    
+      filename = ['cell' num2str(j) '.txt']; 
+    
+      x = [relative_luminosity(j,:),0]; 
+      y = [displacement(j,:),0]; 
+      to_write = [area_all{j,1};intensity_all{j,1}; perimeter_all{j,1}; x; y]; 
+      
+
+    
+        fid = fopen(filename, 'w'); 
+        
+        fprintf(fid,[' Area    ' '     Intensity ' '  perimeter ' '  Norm Intensity ' 'Displacement \n']); 
+        
+        fprintf(fid,'%f    %f    %f      %f     %f \n',to_write); 
+
+
+
+
+end 
+
 
 
 
