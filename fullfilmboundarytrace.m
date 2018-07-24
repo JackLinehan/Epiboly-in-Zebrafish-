@@ -1,34 +1,29 @@
 %% BUILD: Trace boundary through movie 
 % This program allows you to trace the outline of a cell, and provides that
-% outlines centroid, area, perimeter and center of mass. You proceed
+% outline's centroid, area, perimeter. You proceed
 % through one full run of the movie tracking one cell, get to the end and
 % are given the option to do it all again for another cell. 
 % Jack Linehan (6.8.18)
+% Follow That Cell: Motility Analysis 
+%% Edits log 
+% - user decides where to start and end tracing 
+% - if the figure window is closed data is still saved to generated file
+% - 7.24.18 
 
 %% Frame By Frame movie analysis 
-% this script loads in a movie saved as a .tif and lets you to scroll
-% through it frame by frame. 
+% this script loads in a movie saved as a .tif 
 
-% try to make so you can rewrite trace an object within the same frame, 
-% save the data when your done to the directory so you don't overwrite it! 
-% start saving the centorids
 fname = uigetfile(); 
-% Load in image data
-%fname = 'C:\Users\JLinehan\Desktop\EVL- Epiboly\MAX_Ex1HDRF1timelapse5_12_18.tif'; % name of .tif file 
-%fname = 'C:\Users\JLinehan\Desktop\EVL- Epiboly\boundry tracing versions\6_19_18\MAX_F1 Z clutch 4hr movie.lif - Series004.tif'; 
-%fname = 'C:\Users\JLinehan\Desktop\EVL- Epiboly\boundry tracing versions\6_19_18\MAX_F1 Z clutch 4hr movie.lif - Series006.tif'; 
-%fname = 'C:\Users\JLinehan\Desktop\EVL- Epiboly\boundry tracing versions\6_19_18\MAX_F1 V ON timelapse 6_7_18.lif - series one drifted.tif'; 
-%fname = 'C:\Users\JLinehan\Desktop\EVL- Epiboly\boundry tracing versions\6_19_18\MAX_F1 V ON timelapse 6_7_18.lif - series two part one.tif'; 
-%fname = 'C:\Users\JLinehan\Desktop\EVL- Epiboly\boundry tracing versions\6_19_18\MAX_F1 V ON timelapse 6_7_18.lif - series two part two.tif'; 
-%fname = 'C:\Users\JLinehan\Desktop\EVL- Epiboly\boundry tracing versions\6_19_18\MAX_F1 V clutch epiboly 6_7_18.lif - F1 V other side epiboly.tif'; 
 
-%fname = 'C:\Users\JLinehan\Desktop\EVL- Epiboly\boundry tracing versions\MAX_003.lif - WT_6 timelapse.tif'; 
 [info] = imfinfo(fname); % Returns graphics file information (i.e. format,filesize,colortype)
-num_images = numel(info); % Returns the number of elements in info, i.e. the number of frames in the movie 
-%num_images = 25; 
+
+%% Let the user decide where to start tracing and stop tracing 
+
+first_frame = input('At what frame do you want to begin tracing cells?:'); 
+num_images = input('At what frame do you want to finish tracing cells?:'); 
 enhance = 1.5; % brighten the image up a bit
-flag = 1; 
-%num_images = 5; 
+flag = 1; % counts the number of cells you track 
+
 %% Create file for storing shape data
 % We create a file whose name is the date and time of its creation use the
 % following to avoid issues with colons, which cannnot be used in strings
@@ -36,63 +31,75 @@ flag = 1;
 filename = datestr(now,'mm-dd-yyyy HH-MM'); 
 mkdir(filename); 
 
-% num_images = 15;  
 cell_number = 0; 
 while (cell_number == 0) 
-
 %% Preallocate the data were intersted in looking at
-my_movie = cell(1,num_images);      % Preallocate space to store images 
-my_outline = {1,num_images};        % store outline 
-my_centroids = zeros(num_images,2); % store centroid 
-my_area = zeros(1,num_images);      % preallocate area 
-my_perimeter = zeros(1,num_images); % preallocate perimeter
-my_intensity = zeros(1,num_images); % Preallocates intensity 
+total_space = (num_images - first_frame)+1; 
+
+my_movie = cell(1,total_space);      % Preallocate space to store images 
+my_outline = {1,total_space};        % store outline 
+my_centroids = zeros(total_space,2); % store centroid 
+my_area = zeros(1,total_space);      % preallocate area 
+my_perimeter = zeros(1,total_space); % preallocate perimeter
+my_intensity = zeros(1,total_space); % Preallocates intensity 
 %% Running through the movie 
-for k = 1:num_images
+
+count = 1;
+
+for k = first_frame:num_images
    
     [A,map] = imread(fname, k, 'Info', info); %This reads in the movie frame by frame 
     
-    my_movie{1,k} = A;      % save the frame as a matrix element of a preallocated cell array 
+    my_movie{1,count} = A;      % save the frame as a matrix element of a preallocated cell array 
+    
+    count = count +1;
+    
 end 
-count = 1; 
 
-set(gcf, 'Position', get(0,'Screensize')); % Maximize figure.
+count = 1;
 
-while (count <= num_images) 
+handle = figure(1); 
+ 
+while (count <= total_space) 
     
         if (count >1)
         direction = waitforbuttonpress; 
-        % if your satisified with the shape you have drawn than left click
+        % if your satisified with the shape you have drawn then left click
         % the mouse, if not press any key and you erase your work and get
         % to do it again. 
             if (direction ==1 )
                 count = count -1; 
-                   
             end
         end 
+        
 fontSize = 16; 
 grayImage = my_movie{1,count}; %imread(fullFileName);
-%subplot(1,2,1); 
+
 imshow(my_movie{1,count}*enhance,map);
-set(gcf,'Position',get(0,'Screensize')); 
-disp(count); 
-%set(figure(gcf), 'Position', get(0,'Screensize')); % Maximize figure.
-title=(['Frame:',num2str(count)]); 
+set(handle,'Position',get(0,'Screensize')); 
+% set(handle,'pointer','crosshair'); changes the pointer style of the
+% mouse: works on the first frame but does not on the followers 
+
+disp(count+first_frame); 
 axis on;
 
-%set(my_figure, 'Position', get(0,'Screensize')); % Maximize figure.
-if (count == 1)
+if (count == first_frame)
     message = sprintf('Left click and hold to begin drawing.\nSimply lift the mouse button to finish. \n If your upset with your work hit space bar and you will get to try again');
-    uiwait(msgbox(message));
-    %count = count + 1; 
+    uiwait(msgbox(message)); 
 end 
+
 hFH = imfreehand();
 % Create a binary image ("mask") from the ROI object.
-binaryImage = hFH.createMask();
-xy = hFH.getPosition;
+    if (ishghandle(handle) == 0) % check to make sure the figure still exists, if they delete it the program saves whatever data they collected for however far they made it through the movie
+        count = total_space; % finish the while loop and save whatever data is in the workspace 
+    else 
+     binaryImage = hFH.createMask();
+     %xy = hFH.getPosition;
+    end 
 
-% Label the binary image and computer the centroid and center of mass.
-%labeledImage = bwlabel(binaryImage);
+
+% Label the binary image and compute the centroid and center of mass.
+
 measurements = regionprops(binaryImage, grayImage, ...
     'area', 'Centroid', 'WeightedCentroid', 'Perimeter');
 my_area(1,count) = measurements.Area; 
@@ -114,13 +121,6 @@ x = xy(:, 2); % Columns.
 y = xy(:, 1); % Rows.
 y = -1.*y; 
 
-% subplot(1,2,2); 
-% hold on 
-% plot(x,y);
-% plot(my_centroids(1:count,1),-1.*my_centroids(1:count,2))
-% axis([0 500 -500 0])
-% hold off 
-
 count = count + 1;  
 
 end 
@@ -135,24 +135,29 @@ end
  % my_intensity 
 
  
- h = pwd(); 
- cd(filename); 
+ h = pwd(); % get current directory 
+ cd(filename); % go to new folder 
  
- save(['shape_data', num2str(flag)],'my_outline','my_area','my_centroids','my_perimeter','my_intensity'); 
+ save(['shape_data', num2str(flag)],'my_outline','my_area','my_centroids','my_perimeter','my_intensity'); % save the following data as shape_data(n)
  
- flag = flag + 1; 
+ flag = flag + 1; % Move to the next cell 
  
- cd(h); 
+ cd(h); % Go back to the directory fullfilmboundarytrace is saved in 
  
-message = sprintf('Left click to track a new cell'); 
+message = sprintf('Left click to track a new cell'); % prompt to be displayed to the user 
 
-uiwait(msgbox(message)); 
+uiwait(msgbox(message)); % prompt user that a new run has begun
 
-h = waitforbuttonpress; 
+h = waitforbuttonpress; % Wait for them to move forward 
+
+if (ishghandle(handle) == 0) % Do they want to continue tracing cells, or do they want to quit 
+    break 
+end 
 
 if (h == 0)
     cell_number = h; 
 end 
+    
 end 
 
 
