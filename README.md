@@ -31,3 +31,8 @@ This function also computes various statistics for each cell.
 •	Relative luminosity – compares luminosity of each cell to one another at each point in time
 •	Change in luminosity 
 
+
+DEA_COPY_reshapembryo.m\\
+
+This code projects the 2D coordinates collected from the max projection into 3D using spherical coordinate transformations. To help visualize the process, a digital yolk sac is created. The code generates an animation, and a gif, of the animation, of the EVL cells as they proceed through epiboly and into gastrulation. 
+
